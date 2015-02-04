@@ -19,7 +19,9 @@
 #include <libpic30.h>
 #include "motor.h"
 #include "timer.h"
+#include "asserv.h"
 #include <uart.h>
+#include <stdlib.h> // contient le prototype de atoi
 //#include "asserv.h"
 /******************************************************************************/
 /* Global Variable Declaration                                                */
@@ -46,19 +48,40 @@ _FICD(ICS_PGD1 & JTAGEN_OFF);
 /* Main Program                                                               */
 
 /******************************************************************************/
-
+/////////////////////////////////Variables globales////////////////////////////
 long old_state = 0;
-int pwm1 = 60, pwm2 = 60;
+int pwm1 = 0, pwm2 = 0;
 int state = 0; // 0arret , 1 avant, 2 recule, 3 gauche , 4 droite
+int diffg = 0, diffd = 0;
+unsigned int oldtics_g = 0, oldtics_d = 0;
+char buffer[25] = {0};
+char datax[4] = {0};
+char datay[4] = {0};
+int done = 0; //vairable qui permet de
+int begin =0; //variable qui permet de lancer la reception de la trame
+int compteur = 0;
+int cmdx = 100, cmdy = 100;
+////////////////////////////////////////////////////////////////////////////////
 
+
+
+///////////////////////////////////INTERRUPTION////////////////////////////////
 void __attribute__((interrupt, auto_psv)) _T2Interrupt(void) {
 
     // compteurs QEI gauche et droit
-    volatile static int tics_g, tics_d;
+    volatile static unsigned int tics_g, tics_d;
     //         // commandes gauches et droite
     //                 // récupération des données des compteurs qei gauche et droit
-    tics_g = (int) POS1CNT;
-    tics_d = (int) POS2CNT;
+    tics_d = (int) POS1CNT;
+    tics_g = (int) POS2CNT;
+
+    diffg = tics_g - oldtics_g;
+    diffd = tics_d - oldtics_d;
+
+    oldtics_g = tics_g;
+    oldtics_d = tics_d;
+
+    routine(-diffg, -diffd); // routine d'asservissement
 
     _T2IF = 0; // On baisse le FLAG
 }
@@ -68,42 +91,42 @@ void __attribute__((interrupt, auto_psv)) _T2Interrupt(void) {
  *************************************************/
 void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void) {
     _U2RXIF = 0; // On baisse le FLAG
-    char test = ReadUART2();
-    if (test == 'z') {
+    char input = 0;
+    input = ReadUART2(); // lecture UART
 
-        state = 1;
-    } else if (test == 's') {
-
-        state = 2;
-    } else if (test == 'q') {
-
-        state = 3;
-
-    } else if (test == 'd') {
-
-        state = 4;
-
-    } else if (test== 't') {
-        if (pwm1 <= 100) {
-            pwm1 = pwm1 + 10;
-            pwm2 = pwm2 + 10;
-        }
-    } else if (test == 'g') {
-        if (pwm1 >= 0) {
-            pwm1 = pwm1 - 10;
-            pwm2 = pwm2 - 10;
-        }
+    if (input == 'X') {// début de la trame
+        begin = 1;
     }
-     else {
+    else if ( input =='$') { // fin de la trame
+        compteur=0;
+        begin = 0;
+        done = 1;
+    }
 
-        state =0;
-
-     
+    if (begin  == 1 ) {
+        buffer[compteur]=input;
+        compteur=compteur+1;
     }
 }
 
 void __attribute__((__interrupt__, no_auto_psv)) _U2TXInterrupt(void) {
     _U2TXIF = 0; // clear TX interrupt flag
+}
+//////////////////////////////////////////////////////////////////////////////////
+
+void traitement_uart(void) {
+    int u = 0;
+
+    for ( u=0 ; u<3 ; u++ ) {
+        datax[u]=  buffer[u+1];
+    }
+
+    for ( u=0 ; u<3 ; u++ ) {
+        datay[u]=  buffer[u+5];
+    }
+    cmdx = atoi(datax);
+    for (u = 0; u < 100;u++) {} // #temporisation
+    cmdy = atoi(datay);
 }
 
 void InitApp(void) {
@@ -138,17 +161,17 @@ void InitApp(void) {
             T2_PS_1_64 &
             T2_SOURCE_INT, 3125); // 3125 pour 5ms
     // configuration des interruptions
-    ConfigIntTimer2(T2_INT_PRIOR_4 & T2_INT_OFF);
+    ConfigIntTimer2(T2_INT_PRIOR_4 & T2_INT_ON);
 
     /////////////////////////////////UART///////////////////////
     //RPINR14bits.
     _U2RXR = 5;
-    //_RP5R = 4; // RP25 = U2TX (p.167)
-    ////////////////////////////////////////////////////////////
+    // _RP5R = 5; // RP25 = U2TX (p.167)
+    ////////////////////////////////////////////////0x8704////////////
 }
 
 int16_t main(void) {
-
+    int com_D, com_G;
     //char test[50]="test";
     Init_All();
     InitApp();
@@ -156,38 +179,17 @@ int16_t main(void) {
 
     long i = 0;
 
-    //PWM_Moteurs_droit(60);
-    //PWM_Moteurs_gauche(-10);
-
-
-
     while (1) {
-        switch (state) {
-            case 0:
-                PWM_Moteurs_droit(0);
-                PWM_Moteurs_gauche(0);
-                break;
-            case 1:
-
-                PWM_Moteurs_droit(-pwm1); //marche avant
-                PWM_Moteurs_gauche(-pwm1);
-                break;
-            case 2:
-
-                PWM_Moteurs_droit(pwm1/2.);
-                PWM_Moteurs_gauche(pwm1/2.);
-                break;
-            case 3:
-                PWM_Moteurs_droit(pwm1/2.);
-                PWM_Moteurs_gauche(-pwm1/2.);
-                break;
-            case 4:
-                PWM_Moteurs_droit(-pwm1);
-                PWM_Moteurs_gauche(pwm1);
-                break;
+        //motion_speed(cmdx / 100 - 1, cmdy / 100 - 1);
+        com_D = ((cmdy-100)-(cmdx-100))/2;
+        com_G = ((cmdy-100)+(cmdx-100))/2;
+        PWM_Moteurs_gauche(com_G);
+        PWM_Moteurs_droit(com_D);
+        if (done ==1) {
+            traitement_uart();
         }
-    }
-    for (i = 0; i > 200; i++) {
+      
+        for (i = 0; i < 100; i++) {} // #temporisation
     }
 }
 
