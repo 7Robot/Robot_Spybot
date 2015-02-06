@@ -22,6 +22,7 @@
 #include "asserv.h"
 #include <uart.h>
 #include <stdlib.h> // contient le prototype de atoi
+#include "ax12.h" // ajout de la lib ax12
 //#include "asserv.h"
 /******************************************************************************/
 /* Global Variable Declaration                                                */
@@ -189,7 +190,11 @@ int16_t main(void) {
             traitement_uart();
         }
       
-        for (i = 0; i < 100; i++) {} // #temporisation
+        __delay_ms(1000);
+        PutAX(254,AX_GOAL_POSITION,800);
+        __delay_ms(1000);
+        PutAX(254,AX_GOAL_POSITION,205);
+        
     }
 }
 
