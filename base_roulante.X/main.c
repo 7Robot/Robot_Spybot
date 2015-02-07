@@ -82,7 +82,7 @@ void __attribute__((interrupt, auto_psv)) _T2Interrupt(void) {
     oldtics_g = tics_g;
     oldtics_d = tics_d;
 
-    routine(-diffg, -diffd); // routine d'asservissement
+    //routine(-diffg, -diffd); // routine d'asservissement
 
     _T2IF = 0; // On baisse le FLAG
 }
@@ -172,7 +172,7 @@ void InitApp(void) {
 }
 
 int16_t main(void) {
-    int com_D, com_G;
+    float com_D, com_G;
     //char test[50]="test";
     Init_All();
     InitApp();
@@ -184,12 +184,12 @@ int16_t main(void) {
         //motion_speed(cmdx / 100 - 1, cmdy / 100 - 1);
         com_D = ((cmdy-100)-(cmdx-100))/2;
         com_G = ((cmdy-100)+(cmdx-100))/2;
-        PWM_Moteurs_gauche(com_G);
-        PWM_Moteurs_droit(com_D);
+
         if (done ==1) {
             traitement_uart();
         }
-      
+        PWM_Moteurs_gauche(com_G);
+        PWM_Moteurs_droit(com_D);
         __delay_ms(1000);
         PutAX(254,AX_GOAL_POSITION,800);
         __delay_ms(1000);
