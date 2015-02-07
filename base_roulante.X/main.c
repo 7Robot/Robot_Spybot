@@ -58,10 +58,13 @@ unsigned int oldtics_g = 0, oldtics_d = 0;
 char buffer[25] = {0};
 char datax[4] = {0};
 char datay[4] = {0};
+char dataA[4] = {0};
+char dataB[4] = {0};
+char dataC[4] = {0};
 int done = 0; //vairable qui permet de
 int begin =0; //variable qui permet de lancer la reception de la trame
 int compteur = 0;
-int cmdx = 100, cmdy = 100;
+int cmdx = 100, cmdy = 100, cmdA = 512, cmdB = 512, cmdC = 512;
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -116,18 +119,37 @@ void __attribute__((__interrupt__, no_auto_psv)) _U2TXInterrupt(void) {
 //////////////////////////////////////////////////////////////////////////////////
 
 void traitement_uart(void) {
-    int u = 0;
+ int u = 0;
 
-    for ( u=0 ; u<3 ; u++ ) {
-        datax[u]=  buffer[u+1];
-    }
+for ( u=0 ; u<3 ; u++ ) {
+datax[u]= buffer[u+1];
+}
 
-    for ( u=0 ; u<3 ; u++ ) {
-        datay[u]=  buffer[u+5];
-    }
-    cmdx = atoi(datax);
-    for (u = 0; u < 100;u++) {} // #temporisation
-    cmdy = atoi(datay);
+for ( u=0 ; u<3 ; u++ ) {
+datay[u]= buffer[u+5];
+}
+
+for ( u=0 ; u<4 ; u++ ) {
+dataA[u]= buffer[u+9];
+}
+
+for ( u=0 ; u<4 ; u++ ) {
+dataB[u]= buffer[u+14];
+}
+
+for ( u=0 ; u<4 ; u++ ) {
+dataC[u]= buffer[u+19];
+}
+
+cmdx = atoi(datax);
+for (u = 0; u < 100;u++) {} // #temporisation
+cmdy = atoi(datay);
+for (u = 0; u < 100;u++) {} // #temporisation
+cmdA = atoi(dataA);
+for (u = 0; u < 100;u++) {} // #temporisation
+cmdB = atoi(dataB);
+for (u = 0; u < 100;u++) {} // #temporisation
+cmdC = atoi(dataC);
 }
 
 void InitApp(void) {
@@ -178,22 +200,27 @@ int16_t main(void) {
     InitApp();
     DFLT1CONbits.QECK = 5;
 
-    long i = 0;
-
     while (1) {
         //motion_speed(cmdx / 100 - 1, cmdy / 100 - 1);
-        com_D = ((cmdy-100)-(cmdx-100))/2;
-        com_G = ((cmdy-100)+(cmdx-100))/2;
-
+        if (cmdy>100)
+        {
+            com_D = ((cmdy-100)-(cmdx-100))/2;
+            com_G = ((cmdy-100)+(cmdx-100))/2;
+        }
+        else
+        {
+            com_D = ((cmdy-100)+(cmdx-100))/2;
+            com_G = ((cmdy-100)-(cmdx-100))/2;
+        }
         if (done ==1) {
             traitement_uart();
         }
         PWM_Moteurs_gauche(com_G);
         PWM_Moteurs_droit(com_D);
-        __delay_ms(1000);
-        PutAX(254,AX_GOAL_POSITION,800);
-        __delay_ms(1000);
-        PutAX(254,AX_GOAL_POSITION,205);
+        //__delay_ms(1000);
+        //PutAX(254,AX_GOAL_POSITION,800);
+        //__delay_ms(1000);
+        //PutAX(254,AX_GOAL_POSITION,205);
         
     }
 }
