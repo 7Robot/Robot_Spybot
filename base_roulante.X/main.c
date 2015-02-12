@@ -32,7 +32,7 @@
 
 
 /******************************************************************************/
-/* Configuartion               s                                               */
+/* Configuartion                                                              */
 /******************************************************************************/
 
 // Select Oscillator and switching.
@@ -58,9 +58,9 @@ unsigned int oldtics_g = 0, oldtics_d = 0;
 char buffer[25] = {0};
 char datax[4] = {0};
 char datay[4] = {0};
-char dataA[4] = {0};
-char dataB[4] = {0};
-char dataC[4] = {0};
+char dataA[5] = {0};
+char dataB[5] = {0};
+char dataC[5] = {0};
 int done = 0; //vairable qui permet de
 int begin =0; //variable qui permet de lancer la reception de la trame
 int compteur = 0;
@@ -144,8 +144,10 @@ dataC[u]= buffer[u+19];
 cmdx = atoi(datax);
 for (u = 0; u < 100;u++) {} // #temporisation
 cmdy = atoi(datay);
+
 for (u = 0; u < 100;u++) {} // #temporisation
 cmdA = atoi(dataA);
+//PutAX(AX_BROADCAST, AX_GOAL_POSITION, cmdA);
 for (u = 0; u < 100;u++) {} // #temporisation
 cmdB = atoi(dataB);
 for (u = 0; u < 100;u++) {} // #temporisation
@@ -201,7 +203,11 @@ int16_t main(void) {
     DFLT1CONbits.QECK = 5;
 
     while (1) {
+        
         //motion_speed(cmdx / 100 - 1, cmdy / 100 - 1);
+        if (done ==1) {
+            traitement_uart();
+        }
         if (cmdy>100)
         {
             com_D = ((cmdy-100)-(cmdx-100))/2;
@@ -212,15 +218,15 @@ int16_t main(void) {
             com_D = ((cmdy-100)+(cmdx-100))/2;
             com_G = ((cmdy-100)-(cmdx-100))/2;
         }
-        if (done ==1) {
-            traitement_uart();
-        }
+
         PWM_Moteurs_gauche(com_G);
         PWM_Moteurs_droit(com_D);
+        
+
         //__delay_ms(1000);
-        //PutAX(254,AX_GOAL_POSITION,800);
+        //PutAX(AX_BROADCAST,AX_GOAL_POSITION,cmdA);
         //__delay_ms(1000);
-        //PutAX(254,AX_GOAL_POSITION,205);
+        //PutAX(254,AX_GOAL_POSITION,cmdA);
         
     }
 }

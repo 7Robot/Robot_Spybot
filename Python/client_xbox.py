@@ -1,5 +1,12 @@
 #!/usr/bin/env python2
 
+#Axe X joystick gauche : axis(0)
+#Axe Y joystick gauche : axis(1)
+#Axe X joystick droit : axis(3)
+#Axe Y joystick droit : axis(4)
+#Trigger gauche : axis(2)
+#Trigger droit : axis(5)
+
 import socket
 import sys
 import pygame
@@ -96,16 +103,16 @@ try :
             m_valeur_y_d = str(valeur_y_d)
 
 
-        valeur_trig = int(512 - 512*pad.get_axis(2))
+        valeur_trig_g = int(512 - 512*pad.get_axis(2))
 
-        if valeur_trig < 10 :
-            m_valeur_trig = '000' + str(valeur_trig)
-        elif 10 <= valeur_trig < 100 :
-            m_valeur_trig = '00' + str(valeur_trig)
-        elif 100 <= valeur_trig < 1000 :
-            m_valeur_trig = '0' + str(valeur_trig)
+        if valeur_trig_g < 10 :
+            m_valeur_trig_g = '000' + str(valeur_trig_g)
+        elif 10 <= valeur_trig_g < 100 :
+            m_valeur_trig_g = '00' + str(valeur_trig_g)
+        elif 100 <= valeur_trig_g < 1000 :
+            m_valeur_trig_g = '0' + str(valeur_trig_g)
         else :
-            m_valeur_trig = str(valeur_trig)
+            m_valeur_trig_g = str(valeur_trig_g)
 
 
         b0 = str(pad.get_button(0))
@@ -128,7 +135,7 @@ try :
         #print("Valeur de l'axe y, joystick gauche : %d", valeur_y_g)
         #print("Valeur de l'axe x, joystick droit : %d", valeur_x_d)
         #print("Valeur de l'axe y, joystick droit : %d", valeur_y_d)
-        #print("Valeur du trigger gauche : %d", valeur_trig_g)
+        print("Valeur du trigger gauche : %d", valeur_trig_g)
         #print("Valeur du trigger droit : %d", valeur_trig_d)
 
         #print("Bouton A : ", b0)
@@ -145,12 +152,12 @@ try :
 
         #print("C-STICK : ", cstick)
 
-        message = [m_valeur_x_g, m_valeur_y_g, m_valeur_x_d, m_valeur_y_d, m_valeur_trig, b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, cstick_g, cstick_d]
+        message = [m_valeur_x_g, m_valeur_y_g, m_valeur_x_d, m_valeur_y_d, m_valeur_trig_g, b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, cstick_g, cstick_d]
 
         for i in range (0, len(message)) :
             mess = mess + message[i]
 
-        print(mess)
+        #print(mess)
 
         s.sendall(mess)
 
