@@ -222,11 +222,13 @@ int16_t main(void) {
         PWM_Moteurs_gauche(com_G);
         PWM_Moteurs_droit(com_D);
         
+        PutAX(11,AX_GOAL_POSITION,cmdA);
+        __delay_ms(10);
+        PutAX(12,AX_GOAL_POSITION,cmdB);
+        __delay_ms(10);
+        PutAX(16,AX_GOAL_POSITION,cmdC);
+        __delay_ms(10);
 
-        //__delay_ms(1000);
-        //PutAX(AX_BROADCAST,AX_GOAL_POSITION,cmdA);
-        //__delay_ms(1000);
-        //PutAX(254,AX_GOAL_POSITION,cmdA);
         
     }
 }

@@ -38,7 +38,7 @@ responseAXtype responseAX;
 
 void SetTX() {
     __builtin_write_OSCCONL(OSCCON & 0xBF);
-    _U2RXR = 31;
+    //_U2RXR = 31;
     _RP4R = 0b00101;  // RP25 = U2TX (p.167) On map le tx de l'uart 2 sur la pin rp4
     __builtin_write_OSCCONL(OSCCON | 0x40);
 }
