@@ -141,9 +141,9 @@ for ( u=0 ; u<4 ; u++ ) {
 dataC[u]= buffer[u+19];
 }
 
-cmdx = atoi(datax);
+cmdx = atoi(datax)-100;
 for (u = 0; u < 100;u++) {} // #temporisation
-cmdy = atoi(datay);
+cmdy = atoi(datay)-100;
 
 for (u = 0; u < 100;u++) {} // #temporisation
 cmdA = atoi(dataA);
@@ -208,17 +208,16 @@ int16_t main(void) {
         if (done ==1) {
             traitement_uart();
         }
-        if (cmdy>100)
+        if (cmdx>0)
         {
-            com_D = ((cmdy-100)-(cmdx-100))/2;
-            com_G = ((cmdy-100)+(cmdx-100))/2;
+            com_D = (cmdy-cmdx*cmdx/100)/2;
+            com_G = (cmdy+cmdx*cmdx/100)/2;
         }
         else
         {
-            com_D = ((cmdy-100)+(cmdx-100))/2;
-            com_G = ((cmdy-100)-(cmdx-100))/2;
+            com_D = (cmdy+cmdx*cmdx/100)/2;
+            com_G = (cmdy-cmdx*cmdx/100)/2;
         }
-
         PWM_Moteurs_gauche(com_G);
         PWM_Moteurs_droit(com_D);
         
